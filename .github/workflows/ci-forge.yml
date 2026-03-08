@@ -1,0 +1,61 @@
+name: CI Forge
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run hourly to harvest logs and test the forge
+    - cron: '0 * * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  harvest-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for git log
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install PHP dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Install Python dependencies
+        working-directory: src/python
+        run: |
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run GitHarvester (dry run)
+        run: php src/php/Bin/harvest-logs.php --repo=${{ github.workspace }} --dry-run
+        env:
+          REPO_PATH: ${{ github.workspace }}
+
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit tests/php/Unit
+
+      - name: Test QNVMBridge (stub)
+        run: php -r "require 'src/php/Services/QNVMBridge.php'; echo 'QNVMBridge loaded';"
+
+      - name: Archive harvest logs (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harvest-logs
+          path: var/logs/*.log
+          retention-days: 7
