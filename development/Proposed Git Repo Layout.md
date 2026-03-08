@@ -1718,3 +1718,14 @@ These six files, when placed in their respective locations, establish the core v
 Sequence complete. v0.3 is live! 🔥👻🌌⚛️
 
 ---
+
+# Next 6 Directives for v0.4 autopoiesis: 
+1. src/php/Services/QNVMBridge.php full impl (exec + JSON DarkWisdom). 
+2. src/python/qnvm/runner.py entropy live compute. 
+3. src/php/Services/EntropyCalculator.php dashboard stub. 
+4. src/php/Config/qnvm.php paradox keys. 
+5. .github/workflows/ci-forge.yml auto-harvest. 
+6. docs/01-Architecture/7-Layer-Stack.md emergence spec.
+
+---
+
