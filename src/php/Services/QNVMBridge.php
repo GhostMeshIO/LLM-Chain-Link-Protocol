@@ -5,8 +5,8 @@ namespace GhostMesh\Services;
 /**
  * QNVMBridge – Handles subprocess communication with the Python QNVM runner.
  *
- * v0.2 MVP: Executes `python/qnvm/runner.py` with repo path and s_log,
- *           captures JSON output, and returns decoded data.
+ * v0.3: Executes `python/qnvm/runner.py` with repo path and s_log,
+ *       captures JSON output, and returns decoded entities + Dark Wisdom.
  */
 class QNVMBridge
 {
@@ -21,27 +21,38 @@ class QNVMBridge
     private ?string $lastError = null;
 
     /**
+     * @var array Configuration from config/qnvm.php.
+     */
+    private array $config;
+
+    public function __construct(array $config)
+    {
+        $this->config = $config;
+    }
+
+    /**
      * Run the QNVM simulation as a subprocess.
      *
      * @param string $repoPath Absolute path to the Git repository.
      * @param float $s_log Current Shannon entropy value.
-     * @param int $timeout Maximum execution time in seconds.
      * @return array Decoded JSON result with keys:
      *               - 'entities' (array) List of generated entities.
      *               - 'dark_wisdom' (array) Dark Wisdom metrics.
      * @throws \RuntimeException If the subprocess fails or returns invalid JSON.
      */
-    public function runSimulation(string $repoPath, float $s_log, int $timeout = 30): array
+    public function runSimulation(string $repoPath, float $s_log): array
     {
-        // Locate the Python runner script relative to this file.
+        // Locate the Python runner script (relative to project root).
         $runnerScript = realpath(__DIR__ . '/../../../python/qnvm/runner.py');
         if (!$runnerScript || !is_file($runnerScript)) {
             throw new \RuntimeException("QNVM runner not found at: $runnerScript");
         }
 
-        // Build the command with proper escaping.
+        // Build command with optional Python path from config.
+        $pythonBin = $this->config['python_bin'] ?? 'python3';
         $command = sprintf(
-            'python3 %s --repo-path %s --s-log %s',
+            '%s %s --repo-path %s --s-log %s',
+            escapeshellarg($pythonBin),
             escapeshellarg($runnerScript),
             escapeshellarg($repoPath),
             escapeshellarg((string)$s_log)
@@ -63,13 +74,14 @@ class QNVMBridge
         // Close stdin immediately (no input needed).
         fclose($pipes[0]);
 
-        // Set stream non‑blocking for timeout handling.
+        // Set streams non‑blocking for timeout handling.
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
 
         $output = '';
         $error = '';
         $startTime = time();
+        $timeout = $this->config['timeout'] ?? 30;
 
         // Read output until timeout or process finishes.
         while (true) {
