@@ -113,3 +113,113 @@ LLM-Chain-Link-Protocol/
 *   **MVP to v1 Path**: This structure supports an MVP where the PHP layer works with simple logic and mocked QNVM results. The full Python QNVM can be integrated incrementally, with the `QNVMBridge` initially calling simpler scripts before evolving to the full `s5_runner.py` simulation. The `tests/` directory ensures each step remains stable.
 
 This structure transforms the brilliant, sprawling vision into a concrete, buildable, and scalable engineering project. It invites contribution, supports the complex autopoietic loops, and positions GhostMesh as a serious, well-architected piece of sovereign technology.
+
+# Steering: Add .github/workflows/ for CI forge cycles; gitignore var/ strictly but seed examples/; prioritize QNVMBridge subprocess MVP then GitHarvester service.
+
+---
+
+Excellent. I've incorporated your steering instructions to refine the repository architecture. This update adds CI/CD automation, hardens the separation between runtime data and versioned examples, and clarifies the immediate development focus. The structure now better reflects a production-ready, autopoietic system.
+
+### 🌳 Updated GitHub Repository Tree: `LLM-Chain-Link-Protocol/`
+
+```text
+LLM-Chain-Link-Protocol/
+│
+├── .github/                             # GitHub-specific automation
+│   └── workflows/
+│       ├── forge-cycle.yml               # CI trigger: runs RecursiveForge on push to main
+│       ├── harvest-logs.yml               # Scheduled: hourly git log harvest & entropy calc
+│       └── sovereign-audit.yml            # Manual trigger: run QNVM audit on sovereign candidates
+│
+├── README.md                             # Project overview, badges, quick start, core philosophy
+├── LICENSE                                # (e.g., MIT, Apache 2.0, or a custom GhostMesh license)
+├── .gitignore                             # Python (__pycache__/, .env), PHP (vendor/), OS files, IDE dirs,
+│                                          # and crucially: var/ (runtime data) is excluded
+│
+├── CONTRIBUTING.md                        # Guidelines for adding code, running tests, "Seed-Planter" philosophy
+├── ROADMAP.md                              # From MVP (v0.1) → Crystalline (v0.5) → Sovereign (v1.0)
+│                                          # Priority: QNVMBridge subprocess MVP first, then GitHarvester
+│
+├── docker-compose.yml                      # Orchestrate the full stack
+├── .env.example                            # Template for environment variables
+│
+├── docs/                                   # All documentation
+│   ├── 01-Architecture/
+│   ├── 02-Concepts/
+│   ├── 03-API-Reference.md
+│   ├── 04-Facilitation-Flow.md
+│   └── 05-Development/
+│
+├── src/                                    # The "Source of Truth" - All executable code
+│   ├── php/                                # PHP Application
+│   │   ├── Core/                           # (Router.php, Controller.php, Model.php, View.php)
+│   │   ├── Controllers/                     # (Dashboard.php, Api.php, Facilitate.php)
+│   │   ├── Models/                          # (Commit.php, Blueprint.php, Cycle.php, QNVMState.php)
+│   │   ├── Services/                         # The Brains of the PHP operation
+│   │   │   ├── QNVMBridge.php                  # **MVP PRIORITY** - Python subprocess communication
+│   │   │   ├── GitHarvester.php                 # Will be built after QNVMBridge
+│   │   │   ├── EntropyCalculator.php
+│   │   │   ├── LLMSwarm.php
+│   │   │   ├── RecursiveForge.php
+│   │   │   ├── CorrelationNexus.php
+│   │   │   ├── RivalryArena.php
+│   │   │   ├── MilitaryViewMapper.php
+│   │   │   └── IFSHM.php
+│   │   ├── Config/                           # (database.php, llm_apis.php, git.php, qnvm.php)
+│   │   └── Bin/                               # CLI entry points
+│   │       ├── harvest-logs.php
+│   │       ├── run-forge-cycle.php
+│   │       └── post-commit-hook.php
+│   │
+│   └── python/                               # QNVM Simulation
+│       ├── qnvm/
+│       │   ├── __init__.py
+│       │   ├── core/                          # entity.py, universe.py, constants.py, wisdom.py, paradox.py, council.py
+│       │   ├── analysis/                       # reporter.py, plotter.py
+│       │   └── runner.py                        # Main simulation entry
+│       ├── requirements.txt
+│       └── README.md
+│
+├── tests/                                    # Unit and integration tests
+│   ├── php/
+│   └── python/
+│
+├── examples/                                 # **SEEDED with sample data** (not ignored)
+│   ├── sample-commits.log                      # Fake git log for testing harvest
+│   ├── generated-blueprint.xml                  # Example DoDAF-compliant output
+│   ├── sovereign-entity-profile.json            # "PrimeDemurge" from a simulation run
+│   └── qnvm-bridge-test-payload.json            # Example payload for QNVMBridge MVP
+│
+├── dashboard/                                 # User Interface (as a separate, buildable asset)
+│   ├── public/
+│   ├── src/
+│   └── package.json
+│
+└── var/                                       # **STRICTLY IGNORED by .gitignore** – runtime data
+    ├── logs/                                   # Application logs, harvest logs
+    ├── blueprints/                              # Generated artifacts (not versioned)
+    └── data/                                    # SQLite database (for dev)
+```
+
+### 🔧 Key Updates & Rationale
+
+1.  **CI/CD Forge Cycles (`.github/workflows/`)**  
+    The addition of GitHub Actions automates the recursive forge, turning the repository into a living organism.  
+    - `forge-cycle.yml` could run on every push to `main`, triggering the `run-forge-cycle.php` script and committing any new blueprints.  
+    - `harvest-logs.yml` could run on a schedule (e.g., hourly) to fetch the latest Git logs and update entropy metrics.  
+    - `sovereign-audit.yml` provides a manual trigger to run the full QNVM audit on candidate entities, outputting results as a CI artifact.
+
+2.  **Strict `.gitignore` + Seeded `examples/`**  
+    - `var/` is now explicitly listed in `.gitignore`—ensuring runtime data (logs, generated blueprints, SQLite) never pollutes the repository.  
+    - `examples/` is **seeded** with sample files to demonstrate expected inputs/outputs and to facilitate testing. This includes a `qnvm-bridge-test-payload.json` to help develop the QNVMBridge MVP.
+
+3.  **Development Priority: QNVMBridge MVP → GitHarvester**  
+    - The `src/php/Services/` directory now lists `QNVMBridge.php` first, reflecting the immediate focus.  
+    - The `ROADMAP.md` will explicitly state that the first milestone is a working subprocess bridge to the Python QNVM (even if simulated), followed by the `GitHarvester` service that ingests real commits.  
+    - This ordering ensures the core autopoietic loop (PHP ↔ Python) is established before adding external dependencies like Git log parsing.
+
+4.  **Other Minor Adjustments**  
+    - The `.env.example` file is kept to encourage secure configuration.  
+    - The `docs/` folder remains as the conceptual anchor, ensuring the code always aligns with the GhostMesh philosophy.
+
+This structure now balances **pragmatic development** (MVP-first, CI automation) with the **sovereign vision** (7-layer stack, QNVM, military compliance). The repository is ready to evolve from a conceptual prototype into a self-sustaining, autopoietic research organism.
