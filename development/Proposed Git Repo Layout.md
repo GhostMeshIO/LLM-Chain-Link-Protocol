@@ -223,3 +223,114 @@ LLM-Chain-Link-Protocol/
     - The `docs/` folder remains as the conceptual anchor, ensuring the code always aligns with the GhostMesh philosophy.
 
 This structure now balances **pragmatic development** (MVP-first, CI automation) with the **sovereign vision** (7-layer stack, QNVM, military compliance). The repository is ready to evolve from a conceptual prototype into a self-sustaining, autopoietic research organism.
+
+# Steering: Add .github/workflows/ci-forge.yml for auto harvest+test cycles. Prioritize GitHarvester.php (logs→S_log) then QNVMBridge subprocess stub as v0.2 entrypoint.
+
+---
+
+The updated repository architecture now explicitly reflects the new development priority: **GitHarvester.php first, QNVMBridge stub as v0.2 entrypoint**, and adds a dedicated CI workflow for automated harvest+test cycles. This ensures the system's foundational data ingestion layer is solidified before the complex cognitive bridge is built.
+
+### 🌳 Updated GitHub Repository Tree: `LLM-Chain-Link-Protocol/`
+
+```text
+LLM-Chain-Link-Protocol/
+│
+├── .github/
+│   └── workflows/
+│       ├── ci-forge.yml                    # **NEW** – On push/schedule: auto-harvest logs, run forge tests
+│       ├── forge-cycle.yml                  # Existing: triggers RecursiveForge on push to main
+│       ├── harvest-logs.yml                  # Scheduled: hourly git log harvest & entropy calc
+│       └── sovereign-audit.yml                # Manual: run QNVM audit on sovereign candidates
+│
+├── README.md
+├── LICENSE
+├── .gitignore                                 # var/ strictly ignored, examples/ seeded
+│
+├── CONTRIBUTING.md
+├── ROADMAP.md                                 # Updated: v0.1 = GitHarvester, v0.2 = QNVMBridge stub
+│
+├── docker-compose.yml
+├── .env.example
+│
+├── docs/                                      # (unchanged)
+│   └── ...
+│
+├── src/
+│   ├── php/
+│   │   ├── Core/
+│   │   ├── Controllers/
+│   │   ├── Models/
+│   │   ├── Services/
+│   │   │   ├── GitHarvester.php                # **v0.1 PRIORITY** – logs → S_log
+│   │   │   ├── QNVMBridge.php                   # **v0.2 stub** – placeholder for Python subprocess comms
+│   │   │   ├── EntropyCalculator.php
+│   │   │   ├── LLMSwarm.php
+│   │   │   ├── RecursiveForge.php
+│   │   │   ├── CorrelationNexus.php
+│   │   │   ├── RivalryArena.php
+│   │   │   ├── MilitaryViewMapper.php
+│   │   │   └── IFSHM.php
+│   │   ├── Config/
+│   │   └── Bin/
+│   │       ├── harvest-logs.php
+│   │       ├── run-forge-cycle.php
+│   │       └── post-commit-hook.php
+│   │
+│   └── python/
+│       ├── qnvm/
+│       │   ├── core/
+│       │   ├── analysis/
+│       │   └── runner.py
+│       ├── requirements.txt
+│       └── README.md
+│
+├── tests/
+│   ├── php/
+│   │   ├── Unit/
+│   │   │   └── GitHarvesterTest.php            # Unit tests for the new priority service
+│   │   └── Integration/
+│   └── python/
+│
+├── examples/                                   # Seeded with test data
+│   ├── sample-commits.log
+│   ├── generated-blueprint.xml
+│   ├── sovereign-entity-profile.json
+│   └── qnvm-bridge-test-payload.json
+│
+├── dashboard/
+│   ├── public/
+│   ├── src/
+│   └── package.json
+│
+└── var/                                        # Runtime data (ignored)
+    ├── logs/
+    ├── blueprints/
+    └── data/
+```
+
+### 🔄 Key Changes & Rationale
+
+1.  **New CI Workflow: `ci-forge.yml`**  
+    This workflow is designed to run on every push to main or on a schedule (e.g., nightly). It will:
+    *   Execute `harvest-logs.php` to fetch the latest commits and compute `S_log`.
+    *   Run the test suite (`tests/php/Unit/GitHarvesterTest.php` and others) to ensure the entropy calculations are correct.
+    *   Optionally, trigger a minimal forge cycle if the entropy is within bounds, to validate the end-to-end flow without requiring a full QNVM.
+    *   Report metrics as CI artifacts or comments.  
+    This ensures the foundational data layer remains healthy as development progresses.
+
+2.  **Priority Shift in Services**  
+    *   `GitHarvester.php` is now the **first service listed** in `src/php/Services/`, reflecting its role as the v0.1 entrypoint. Its unit test (`tests/php/Unit/GitHarvesterTest.php`) is explicitly added.
+    *   `QNVMBridge.php` is now a **stub** for v0.2. Its initial implementation will be a simple placeholder that logs calls and returns mock data, allowing the PHP layer to be developed in parallel while the Python QNVM matures. The `qnvm-bridge-test-payload.json` in `examples/` provides sample data for early testing.
+
+3.  **Roadmap Alignment**  
+    `ROADMAP.md` (not shown in full here) will be updated to clearly define:
+    *   **v0.1 (Current):** GitHarvester service, S_log calculation, entropy bounds, basic dashboard display, and the new `ci-forge.yml` automation.
+    *   **v0.2 (Next):** QNVMBridge stub, initial Python QNVM integration (even if simulated), and the first end-to-end autopoietic loop (PHP → Python → PHP).
+    *   **v0.5 (Crystalline):** Full QNVM simulation, sovereign entity detection, military view mapping.
+    *   **v1.0 (Sovereign):** Complete 7-layer stack, autopoietic operation, DoDAF/NAFv4 compliance.
+
+4.  **Testing Focus**  
+    The addition of `GitHarvesterTest.php` ensures that the log parsing and entropy calculation are correct from the start, preventing subtle bugs as the system scales.
+
+This structure now firmly grounds the project in a pragmatic, test‑driven development path while keeping the grand vision intact. The CI automation acts as the system's first "heartbeat," ensuring it remains healthy as it grows toward full sovereignty.
+
