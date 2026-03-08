@@ -1,0 +1,34 @@
+# PHP
+vendor/
+composer.lock
+.phpunit.result.cache
+
+# Python
+__pycache__/
+*.pyc
+.python-version
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Environment
+.env
+
+# Runtime data – strictly ignored
+var/
+!examples/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
