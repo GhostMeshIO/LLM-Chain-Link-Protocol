@@ -6,9 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    # Run hourly to harvest logs and test the forge
-    - cron: '0 * * * *'
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 * * * *'   # hourly harvest
+  workflow_dispatch:
 
 jobs:
   harvest-and-test:
@@ -18,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for git log
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -41,21 +40,44 @@ jobs:
           pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run GitHarvester (dry run)
-        run: php src/php/Bin/harvest-logs.php --repo=${{ github.workspace }} --dry-run
+      - name: Run GitHarvester (live harvest)
+        run: |
+          php src/php/Bin/harvest-logs.php --repo=${{ github.workspace }} --json > harvest_result.json
+          cat harvest_result.json
         env:
           REPO_PATH: ${{ github.workspace }}
+
+      - name: Check entropy bounds
+        run: |
+          S_LOG=$(jq '.s_log' harvest_result.json)
+          if (( $(echo "$S_LOG < 0.10" | bc -l) )) || (( $(echo "$S_LOG > 0.30" | bc -l) )); then
+            echo "Entropy $S_LOG is out of bounds!"
+            exit 1
+          fi
+          echo "Entropy $S_LOG is within bounds."
+
+      - name: Run QNVMBridge test
+        run: |
+          php -r "
+            require 'src/php/Services/QNVMBridge.php';
+            require 'src/php/Config/qnvm.php';
+            \$config = include 'src/php/Config/qnvm.php';
+            \$bridge = new GhostMesh\Services\QNVMBridge(\$config);
+            \$result = \$bridge->runSimulation('${{ github.workspace }}', 0.22);
+            echo json_encode(\$result, JSON_PRETTY_PRINT);
+          " > qnvm_result.json
+          cat qnvm_result.json
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit tests/php/Unit
 
-      - name: Test QNVMBridge (stub)
-        run: php -r "require 'src/php/Services/QNVMBridge.php'; echo 'QNVMBridge loaded';"
-
-      - name: Archive harvest logs (if any)
+      - name: Archive logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: harvest-logs
-          path: var/logs/*.log
+          name: forge-artifacts
+          path: |
+            harvest_result.json
+            qnvm_result.json
+            var/logs/
           retention-days: 7
