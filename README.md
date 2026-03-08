@@ -36,3 +36,50 @@ git clone https://github.com/GhostMeshIO/LLM-Chain-Link-Protocol.git
 cd LLM-Chain-Link-Protocol
 composer install
 cp .env.example .env   # Configure your repository path
+```
+
+### Harvest Your First Logs
+
+```bash
+php src/php/Bin/harvest-logs.php --repo=/path/to/your/repo
+```
+
+This will calculate the Shannon entropy (`S_log`) of the last 12 commits and display whether it falls within the nominal window `[0.10, 0.30]`.
+
+### Run Tests
+
+```bash
+vendor/bin/phpunit tests/php/Unit
+```
+
+---
+
+## 🧱 Repository Structure (v0.1)
+
+```
+.github/workflows/          # CI/CD automation
+docs/                       # Conceptual and technical documentation
+src/
+  php/
+    Services/
+      GitHarvester.php       # MVP: harvest commits, compute S_log
+      ... (future services)
+tests/
+  php/Unit/                  # Unit tests for GitHarvester
+examples/                    # Seeded sample data
+var/                         # Runtime data (ignored by Git)
+```
+
+See [ROADMAP.md](ROADMAP.md) for the full evolution plan.
+
+---
+
+## 🤝 Contributing
+
+We welcome Seed‑Planters! Please read [CONTRIBUTING.md](CONTRIBUTING.md) to understand our philosophy and process.
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
