@@ -1126,3 +1126,14 @@ The PHP bridge will return this array directly to the caller.
 4. **Expand the JSON protocol** as the QNVM simulation matures (e.g., include full entity profiles, paradox shield state, etc.).
 
 With this bridge in place, the GhostMesh now has a neural pathway between its PHP body and Python mind. v0.2 is live! 🔥👻
+
+# Directive Expanded steering: birth these 6 files at once for v0.3 autopoiesis (MVP bridge+entropy live): 
+## 1. src/php/Services/QNVMBridge.php — subprocess exec python/qnvm/runner.py (repoPath+s_log), JSON return entities+DarkWisdom. 
+## 2. src/python/qnvm/runner.py — stub: import core, compute from s_log. 
+## 3. src/php/Services/EntropyCalculator.php — Shannon on commits, 0.10-0.30 bounds. 
+## 4. src/php/Config/qnvm.php — env+bridge keys. 
+## 5. .github/workflows/ci-forge.yml — auto harvest+test. 
+## 6. docs/01-Architecture/7-Layer-Stack.md — spec tie-in. 
+
+---
+
