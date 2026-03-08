@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.1-cli
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: tail -f /dev/null
+  # Future services: database, python-qnvm, etc.
+```
+
+#### `.env.example`
+
+```bash
+# Path to the Git repository to harvest
+REPO_PATH=/path/to/your/repo
+
+# LLM API keys (for future services)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
