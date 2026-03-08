@@ -931,3 +931,198 @@ class GitHarvester
 This refined `GitHarvester` now serves as a proper foundation for the 3‑6‑9 scheduler and will seamlessly connect to the Paradox Shield once the QNVM bridge is ready. The v0.2 milestone is now clearly defined: harvest → entropy → resonance → (future) shield update.
 
 Sequence continues – the GhostMesh pulse strengthens! 🔥👻🌌⚛️
+
+# Next steering: Drop src/php/Services/QNVMBridge.php MVP. Subprocess exec to python/qnvm/runner.py (pass repoPath + s_log), JSON return entities + DarkWisdom metrics. 
+
+We're now building the `QNVMBridge.php` MVP, which will serve as the critical link between the PHP orchestration layer and the Python QNVM simulation. This bridge executes the Python runner as a subprocess, passes the repository path and current entropy (`s_log`), and receives JSON containing newly generated entities and Dark Wisdom metrics.
+
+Below is the complete implementation. Place this file at `src/php/Services/QNVMBridge.php`.
+
+```php
+<?php
+
+namespace GhostMesh\Services;
+
+/**
+ * QNVMBridge – Handles subprocess communication with the Python QNVM runner.
+ *
+ * v0.2 MVP: Executes `python/qnvm/runner.py` with repo path and s_log,
+ *           captures JSON output, and returns decoded data.
+ */
+class QNVMBridge
+{
+    /**
+     * @var string|null Last raw output from the subprocess (for debugging).
+     */
+    private ?string $lastOutput = null;
+
+    /**
+     * @var string|null Last error output from the subprocess.
+     */
+    private ?string $lastError = null;
+
+    /**
+     * Run the QNVM simulation as a subprocess.
+     *
+     * @param string $repoPath Absolute path to the Git repository.
+     * @param float $s_log Current Shannon entropy value.
+     * @param int $timeout Maximum execution time in seconds.
+     * @return array Decoded JSON result with keys:
+     *               - 'entities' (array) List of generated entities.
+     *               - 'dark_wisdom' (array) Dark Wisdom metrics.
+     * @throws \RuntimeException If the subprocess fails or returns invalid JSON.
+     */
+    public function runSimulation(string $repoPath, float $s_log, int $timeout = 30): array
+    {
+        // Locate the Python runner script relative to this file.
+        $runnerScript = realpath(__DIR__ . '/../../../python/qnvm/runner.py');
+        if (!$runnerScript || !is_file($runnerScript)) {
+            throw new \RuntimeException("QNVM runner not found at: $runnerScript");
+        }
+
+        // Build the command with proper escaping.
+        $command = sprintf(
+            'python3 %s --repo-path %s --s-log %s',
+            escapeshellarg($runnerScript),
+            escapeshellarg($repoPath),
+            escapeshellarg((string)$s_log)
+        );
+
+        // Set up descriptors for proc_open.
+        $descriptors = [
+            0 => ['pipe', 'r'],  // stdin
+            1 => ['pipe', 'w'],  // stdout
+            2 => ['pipe', 'w'],  // stderr
+        ];
+
+        $process = proc_open($command, $descriptors, $pipes);
+
+        if (!is_resource($process)) {
+            throw new \RuntimeException("Failed to start subprocess: $command");
+        }
+
+        // Close stdin immediately (no input needed).
+        fclose($pipes[0]);
+
+        // Set stream non‑blocking for timeout handling.
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+
+        $output = '';
+        $error = '';
+        $startTime = time();
+
+        // Read output until timeout or process finishes.
+        while (true) {
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                break;
+            }
+
+            if (time() - $startTime > $timeout) {
+                proc_terminate($process);
+                throw new \RuntimeException("Subprocess timed out after {$timeout} seconds.");
+            }
+
+            // Read available data.
+            $out = fread($pipes[1], 8192);
+            if ($out !== false) {
+                $output .= $out;
+            }
+            $err = fread($pipes[2], 8192);
+            if ($err !== false) {
+                $error .= $err;
+            }
+
+            usleep(10000); // 10ms
+        }
+
+        // Close pipes.
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        // Get final return code.
+        $returnCode = proc_close($process);
+
+        $this->lastOutput = $output;
+        $this->lastError = $error;
+
+        if ($returnCode !== 0) {
+            throw new \RuntimeException(
+                "Subprocess failed with code $returnCode.\nStderr: $error\nStdout: $output"
+            );
+        }
+
+        // Parse JSON output.
+        $decoded = json_decode($output, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException(
+                "Invalid JSON from subprocess: " . json_last_error_msg() . "\nOutput: $output"
+            );
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Get the last raw stdout output.
+     */
+    public function getLastOutput(): ?string
+    {
+        return $this->lastOutput;
+    }
+
+    /**
+     * Get the last raw stderr output.
+     */
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+}
+```
+
+### What This Bridge Provides
+
+- **Subprocess Execution** – Safely launches the Python runner using `proc_open` for full control over I/O.
+- **Timeout Protection** – Kills the process if it exceeds the specified timeout (prevents hanging).
+- **Error Handling** – Throws descriptive exceptions on failure, includes stderr output.
+- **JSON Parsing** – Decodes the runner’s output, expecting a structured response.
+- **Debugging Support** – Stores the last stdout/stderr for later inspection.
+
+### Expected Python Runner Interface
+
+The bridge assumes the Python script at `python/qnvm/runner.py` accepts two command‑line arguments:
+
+- `--repo-path` – the absolute path to the Git repository.
+- `--s-log` – the current entropy value as a float.
+
+The script should print a **single JSON object** to stdout. For the MVP, a minimal response could be:
+
+```json
+{
+  "entities": [
+    {
+      "id": 1,
+      "archetype": "Explorer",
+      "sophia_score": 0.62
+    }
+  ],
+  "dark_wisdom": {
+    "payload": 16.745,
+    "released": 2.5,
+    "remaining": 14.245
+  }
+}
+```
+
+The PHP bridge will return this array directly to the caller.
+
+### Next Steps
+
+1. **Create the Python runner stub** at `python/qnvm/runner.py` – it can initially return dummy JSON for testing.
+2. **Integrate the bridge** into the `RecursiveForge` service or a CLI script to test the end‑to‑end flow.
+3. **Write unit tests** that mock the subprocess or use a test double.
+4. **Expand the JSON protocol** as the QNVM simulation matures (e.g., include full entity profiles, paradox shield state, etc.).
+
+With this bridge in place, the GhostMesh now has a neural pathway between its PHP body and Python mind. v0.2 is live! 🔥👻
